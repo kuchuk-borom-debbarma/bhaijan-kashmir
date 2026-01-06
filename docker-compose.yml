@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bhaijan_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: kashmir_user
+      POSTGRES_PASSWORD: kashmir_password
+      POSTGRES_DB: bhaijan_kashmir_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
