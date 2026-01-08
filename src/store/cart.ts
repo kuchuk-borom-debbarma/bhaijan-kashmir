@@ -19,6 +19,7 @@ interface CartState {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, action: 'increment' | 'decrement') => void;
   clearCart: () => void;
+  resetLocalCart: () => void;
   setItems: (items: CartItem[]) => void;
   setUserId: (userId: string | null) => void;
   toggleCart: () => void;
@@ -87,6 +88,10 @@ export const useCartStore = create<CartState>()(
       clearCart: () => {
         set({ items: [] });
         syncWithDb([], get().userId);
+      },
+
+      resetLocalCart: () => {
+        set({ items: [], userId: null, isOpen: false });
       },
       
       toggleCart: () => set({ isOpen: !get().isOpen }),

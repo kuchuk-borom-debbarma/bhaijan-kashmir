@@ -17,7 +17,7 @@ interface UserMenuProps {
 export default function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const clearCart = useCartStore((state) => state.clearCart);
+  const resetLocalCart = useCartStore((state) => state.resetLocalCart);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -33,7 +33,7 @@ export default function UserMenu({ user }: UserMenuProps) {
   }, []);
 
   const handleSignOut = async () => {
-    clearCart();
+    resetLocalCart();
     await signOutAction();
   };
 
