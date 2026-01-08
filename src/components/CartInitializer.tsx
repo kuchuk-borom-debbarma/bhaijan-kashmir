@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useCartStore, syncWithDb, CartItem } from '@/store/cart';
 import { getCartAction } from '@/app/cart-actions';
 
@@ -9,57 +9,89 @@ interface CartInitializerProps {
 }
 
 export default function CartInitializer({ userId }: CartInitializerProps) {
-  const { setUserId, setItems, userId: storedUserId } = useCartStore();
-  // use a ref to track if we've already initialized for this user to avoid double-merge in strict mode
-  const initializedUser = useRef<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setUserId(userId || null);
-    
-    // If user just logged in (or we have a userId and it changed)
-    if (userId && userId !== storedUserId && initializedUser.current !== userId) {
-        initializedUser.current = userId;
-        const initCart = async () => {
-            const dbItems = await getCartAction() || [];
-            // Get current local items (guest cart)
-            const localItems = useCartStore.getState().items;
+    // Check if Zustand persist has finished rehydrating
+    const unsubFinishHydration = useCartStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
 
-            if (localItems.length === 0 && dbItems.length === 0) {
-                return;
+    setHydrated(useCartStore.persist.hasHydrated());
+
+    return () => {
+      unsubFinishHydration();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const initialize = async () => {
+      const state = useCartStore.getState();
+      const localUserId = state.userId;
+      const localItems = state.items;
+
+      if (!userId) {
+        // User logged out
+        if (localUserId) {
+             useCartStore.setState({ userId: null });
+        }
+        return;
+      }
+
+      // Case 1: Already synced user (Refresh) -> Fetch fresh from DB (Source of Truth)
+      if (localUserId === userId) {
+        const dbItems = await getCartAction();
+        if (dbItems) {
+            useCartStore.setState({ items: dbItems });
+        }
+        return;
+      }
+
+      // Case 2: Guest -> Login (Merge)
+      if (!localUserId) {
+        const dbItems = await getCartAction() || [];
+        
+        if (localItems.length === 0) {
+            useCartStore.setState({ items: dbItems, userId });
+            return;
+        }
+
+        // Merge Logic
+        const mergedItemsMap = new Map<string, CartItem>();
+
+        dbItems.forEach(item => mergedItemsMap.set(item.id, item));
+
+        localItems.forEach(localItem => {
+            if (mergedItemsMap.has(localItem.id)) {
+                const existing = mergedItemsMap.get(localItem.id)!;
+                mergedItemsMap.set(localItem.id, {
+                    ...existing,
+                    quantity: existing.quantity + localItem.quantity
+                });
+            } else {
+                mergedItemsMap.set(localItem.id, localItem);
             }
+        });
 
-            // Merge Logic
-            const mergedItemsMap = new Map<string, CartItem>();
+        const mergedItems = Array.from(mergedItemsMap.values());
+        
+        // Update Store & DB
+        useCartStore.setState({ items: mergedItems, userId });
+        await syncWithDb(mergedItems, userId);
+        return;
+      }
 
-            // Add DB items first
-            dbItems.forEach(item => {
-                mergedItemsMap.set(item.id, item);
-            });
+      // Case 3: Different User (Switch Account without logout?) -> Reset
+      if (localUserId !== userId) {
+          const dbItems = await getCartAction();
+          useCartStore.setState({ items: dbItems || [], userId });
+      }
+    };
 
-            // Merge local items
-            localItems.forEach(localItem => {
-                if (mergedItemsMap.has(localItem.id)) {
-                    const existing = mergedItemsMap.get(localItem.id)!;
-                    mergedItemsMap.set(localItem.id, {
-                        ...existing,
-                        quantity: existing.quantity + localItem.quantity
-                    });
-                } else {
-                    mergedItemsMap.set(localItem.id, localItem);
-                }
-            });
-
-            const mergedItems = Array.from(mergedItemsMap.values());
-
-            // Update Store
-            setItems(mergedItems);
-
-            // Sync back to DB immediately so the DB reflects the merge
-            await syncWithDb(mergedItems, userId);
-        };
-        initCart();
-    }
-  }, [userId, setUserId, setItems, storedUserId]);
+    initialize();
+  }, [userId, hydrated]);
 
   return null;
 }
