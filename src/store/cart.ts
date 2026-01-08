@@ -26,7 +26,7 @@ interface CartState {
   closeCart: () => void;
 }
 
-const syncWithDb = async (items: CartItem[], userId: string | null) => {
+export const syncWithDb = async (items: CartItem[], userId: string | null) => {
   if (!userId) return;
   await syncCartAction(items.map(item => ({ id: item.id, quantity: item.quantity })));
 };
