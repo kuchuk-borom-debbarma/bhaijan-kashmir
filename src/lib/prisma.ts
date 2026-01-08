@@ -18,7 +18,7 @@ if (isNeon) {
   // Configure Neon for serverless environments
   neonConfig.webSocketConstructor = ws;
   const pool = new NeonPool({ connectionString });
-  adapter = new PrismaNeon(pool);
+  adapter = new PrismaNeon(pool as any);
   console.log('🔌 Connected to Neon DB');
 } else {
   // Use standard Postgres driver for local development

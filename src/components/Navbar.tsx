@@ -1,9 +1,13 @@
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import NavbarCart from './NavbarCart';
 import CartDrawer from './CartDrawer';
+import UserMenu from './UserMenu';
+import { auth } from '@/auth';
 
-export default function Navbar() {
+export default async function Navbar() {
+  const session = await auth();
+
   return (
     <>
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-stone-200">
@@ -28,6 +32,14 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="flex items-center gap-4">
+            {session?.user ? (
+                <UserMenu user={session.user} />
+            ) : (
+                <Link href="/auth/sign-in" className="hidden md:block text-sm font-medium text-walnut hover:text-kashmir-red transition-colors">
+                    Sign In
+                </Link>
+            )}
+
             <NavbarCart />
             
             {/* Mobile Menu Button */}
