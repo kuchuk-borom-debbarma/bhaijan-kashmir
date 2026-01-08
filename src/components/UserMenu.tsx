@@ -4,6 +4,7 @@ import { User, LogOut, UserCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { signOutAction } from '@/app/auth/actions';
+import { useCartStore } from '@/store/cart';
 
 interface UserMenuProps {
   user: {
@@ -16,6 +17,7 @@ interface UserMenuProps {
 export default function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const clearCart = useCartStore((state) => state.clearCart);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -29,6 +31,11 @@ export default function UserMenu({ user }: UserMenuProps) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const handleSignOut = async () => {
+    clearCart();
+    await signOutAction();
+  };
 
   return (
     <div className="relative" ref={menuRef}>
@@ -56,15 +63,13 @@ export default function UserMenu({ user }: UserMenuProps) {
             Profile
           </Link>
 
-          <form action={signOutAction} className="w-full">
-            <button
-              type="submit"
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors text-left"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
-          </form>
+          <button
+            onClick={handleSignOut}
+            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors text-left"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </button>
         </div>
       )}
     </div>

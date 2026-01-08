@@ -14,7 +14,7 @@ let adapter;
 if (isNeon) {
   neonConfig.webSocketConstructor = ws;
   const pool = new NeonPool({ connectionString });
-  adapter = new PrismaNeon(pool);
+  adapter = new PrismaNeon(pool as any);
   console.log('🌱 Seeding Neon DB...');
 } else {
   const pool = new Pool({ connectionString });
