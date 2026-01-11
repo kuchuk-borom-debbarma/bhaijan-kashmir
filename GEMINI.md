@@ -73,9 +73,13 @@ npm start
     -   `page.tsx`: Landing page with Hero and Featured Products.
     -   `shop/page.tsx`: Product listing with category filtering.
     -   `contact/page.tsx`: Contact form and details.
+    -   `checkout/`: Checkout flow (Order creation, Payment).
+    -   `admin/`: Secure dashboard for order management.
 -   **`src/components/`**: Reusable UI components (`Navbar`, `Footer`, `ProductCard`).
 -   **`src/lib/prisma.ts`**: **Crucial.** Singleton Prisma client configuration that handles the logic for switching between Local Postgres (pooling) and Neon Serverless (WebSocket/HTTP).
--   **`prisma/schema.prisma`**: Database schema defining `Product` and `Category`.
+-   **`src/lib/payment/`**: Payment Provider Adapter (Factory pattern handling Mock/Razorpay/Stripe).
+-   **`src/lib/notifications/`**: Notification Provider Adapter (Console/Email).
+-   **`prisma/schema.prisma`**: Database schema defining `Product`, `Category`, `Order`, `OrderItem`, `User`.
 -   **`prisma/seed.ts`**: Database seeding script (idempotent upserts).
 -   **`docker-compose.yml`**: Local PostgreSQL container configuration.
 
@@ -85,3 +89,32 @@ npm start
 -   **Database Access:** Always import `prisma` from `@/lib/prisma` instead of instantiating `new PrismaClient()`.
 -   **Type Safety:** Use Prisma generated types for DB entities.
 -   **Seeding:** The seed script uses a custom `tsconfig.seed.json` to handle CommonJS/ESM compatibility with `ts-node`.
+
+## Features
+
+### Payment & Order System
+-   **Architecture:** Adapter-based system allowing easy switching between payment providers.
+-   **Providers:** 
+    -   `Mock` (Default): Simulates successful transactions for testing.
+    -   `Razorpay`/`Stripe`: Architecture ready for implementation.
+-   **Checkout:** 
+    -   Server-side total calculation (preventing frontend manipulation).
+    -   Zod validation for shipping addresses.
+    -   Rate Limiting (5 attempts/minute).
+-   **Safety Net:** Webhook endpoint (`POST /api/webhooks/payment`) ensures orders are marked PAID even if the browser crashes post-payment.
+
+### Admin Dashboard
+-   **Access:** Secured via `role: "ADMIN"` check.
+-   **Functionality:**
+    -   View Dashboard stats (Revenue, Pending Orders).
+    -   Manage Orders: Update status (Shipped, Delivered).
+    -   Enter Courier & Tracking information.
+
+### Notifications
+-   **Architecture:** Adapter pattern (`NotificationFactory`).
+-   **Current:** `ConsoleProvider` logs emails to stdout.
+-   **Triggers:** Order Confirmation, Order Shipped, Order Delivered.
+
+### Security
+-   **Headers:** Strict security headers (HSTS, XSS Protection, No-Sniff) via `next.config.ts`.
+-   **Error Handling:** Global `not-found.tsx` and `error.tsx` for graceful failure recovery.

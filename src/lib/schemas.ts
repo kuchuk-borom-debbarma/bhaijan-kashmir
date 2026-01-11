@@ -30,3 +30,8 @@ export const completeRegistrationSchema = z.object({
 
 export type CompleteRegistrationFormData = z.infer<typeof completeRegistrationSchema>;
 
+export const checkoutSchema = z.object({
+  address: z.string().min(10, { message: "Please provide a complete shipping address (at least 10 characters)." }),
+});
+
+export type CheckoutFormData = z.infer<typeof checkoutSchema>;

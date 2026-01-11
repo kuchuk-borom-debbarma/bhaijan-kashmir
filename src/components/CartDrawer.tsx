@@ -115,9 +115,13 @@ export default function CartDrawer() {
               <span>₹{subtotal}</span>
             </div>
             <p className="text-xs text-stone-500 text-center">Shipping and taxes calculated at checkout.</p>
-            <button className="w-full py-4 bg-kashmir-green text-white font-bold rounded-xl hover:bg-green-700 transition-colors shadow-lg shadow-green-900/10">
+            <Link 
+              href="/checkout"
+              onClick={closeCart}
+              className="w-full py-4 bg-kashmir-green text-white font-bold rounded-xl hover:bg-green-700 transition-colors shadow-lg shadow-green-900/10 flex items-center justify-center"
+            >
               Proceed to Checkout
-            </button>
+            </Link>
           </div>
         )}
       </div>
