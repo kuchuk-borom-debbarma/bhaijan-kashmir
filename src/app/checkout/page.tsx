@@ -1,10 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cart";
 import { createOrder, verifyOrderPayment } from "./actions";
 import { Loader2 } from "lucide-react";
+
+declare global {
+  interface Window {
+    Razorpay: new (options: any) => { open: () => void };
+  }
+}
+
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -12,6 +24,20 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [paymentProvider, setPaymentProvider] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Determine provider from env if possible, or wait for createOrder response
+    setPaymentProvider(process.env.NEXT_PUBLIC_PAYMENT_PROVIDER || "mock");
+    
+    // Pre-load Razorpay script if needed
+    if (process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "razorpay") {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
 
   const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
@@ -24,22 +50,64 @@ export default function CheckoutPage() {
     try {
       const { orderId, paymentOrder } = await createOrder({ address });
       
-      const result = await verifyOrderPayment({
-        orderId: orderId,
-        paymentId: paymentOrder.id,
-      });
+      if (paymentOrder.providerSpecificData && paymentProvider === "razorpay") {
+        const options = {
+          ...paymentOrder.providerSpecificData,
+          handler: async function (response: RazorpayResponse) {
+            setIsLoading(true);
+            try {
+              const result = await verifyOrderPayment({
+                orderId: orderId,
+                paymentId: response.razorpay_payment_id,
+                providerOrderId: response.razorpay_order_id,
+                signature: response.razorpay_signature,
+              });
 
-      if (result.success) {
-        clearCart();
-        router.push(`/checkout/success?orderId=${orderId}`);
+              if (result.success) {
+                clearCart();
+                router.push(`/checkout/success?orderId=${orderId}`);
+              } else {
+                setErrorMessage("Payment verification failed. Please contact support.");
+              }
+            } catch (err) {
+              console.error("Verification error:", err);
+              setErrorMessage("An error occurred during verification.");
+            } finally {
+              setIsLoading(false);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setIsLoading(false);
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
       } else {
-        setErrorMessage("Payment verification failed. Please try again.");
+        // Mock flow or default
+        const result = await verifyOrderPayment({
+          orderId: orderId,
+          paymentId: paymentOrder.id,
+        });
+
+        if (result.success) {
+          clearCart();
+          router.push(`/checkout/success?orderId=${orderId}`);
+        } else {
+          setErrorMessage("Payment verification failed. Please try again.");
+        }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
-      setErrorMessage(error.message || "An error occurred during checkout");
+      const message = error instanceof Error ? error.message : "An error occurred during checkout";
+      setErrorMessage(message);
     } finally {
-      setIsLoading(false);
+      // Don't set loading false if razorpay is open, it's handled in ondismiss or handler
+      if (paymentProvider !== "razorpay") {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -99,8 +167,12 @@ export default function CheckoutPage() {
               />
             </div>
             <div className="p-4 bg-gray-50 rounded-md text-sm text-gray-600">
-              <p>Payment Method: <strong>Mock Payment</strong></p>
-              <p>This is a simulated transaction for testing purposes.</p>
+              <p>Payment Method: <strong>{paymentProvider === "razorpay" ? "Razorpay" : "Mock Payment"}</strong></p>
+              <p>
+                {paymentProvider === "razorpay" 
+                  ? "Secure payment via Razorpay. Supports UPI, Cards, Netbanking."
+                  : "This is a simulated transaction for testing purposes."}
+              </p>
             </div>
             
             {errorMessage && (

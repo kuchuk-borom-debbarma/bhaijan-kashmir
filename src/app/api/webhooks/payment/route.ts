@@ -15,8 +15,9 @@ export async function POST(req: Request) {
     } else {
       return new Response("Event ignored", { status: 200 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Webhook Error:", error);
-    return new Response(`Webhook Error: ${error.message}`, { status: 500 });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return new Response(`Webhook Error: ${message}`, { status: 500 });
   }
 }
