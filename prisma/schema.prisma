@@ -31,12 +31,6 @@ model Product {
   updatedAt   DateTime    @updatedAt
 }
 
-model RateLimit {
-  key    String  @id
-  points Int
-  expire BigInt?
-}
-
 enum Role {
   USER
   ADMIN
