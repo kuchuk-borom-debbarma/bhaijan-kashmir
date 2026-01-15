@@ -83,6 +83,7 @@ export default function ProductForm({ categories, initialData }: ProductFormProp
             value={formData.categoryId}
             onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
           >
+            <option value="" disabled>Select a Category</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
