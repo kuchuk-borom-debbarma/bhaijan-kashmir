@@ -117,6 +117,10 @@ export async function createProduct(formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   const featured = formData.get("featured") === "true";
   
+  if (!categoryId || categoryId === "") {
+    throw new Error("Category is required. Please create or select a category.");
+  }
+
   let imageUrl = formData.get("image") as string;
   const imageFile = formData.get("imageFile") as File;
 
