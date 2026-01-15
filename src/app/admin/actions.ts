@@ -88,6 +88,40 @@ export async function addShipmentEvent(shipmentId: string, eventData: { status: 
   }
 }
 
+export async function deleteCategory(id: string) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
+
+  // 1. Ensure "Uncategorized" category exists
+  let uncategorized = await prisma.category.findFirst({ where: { name: "Uncategorized" } });
+  
+  if (!uncategorized) {
+    uncategorized = await prisma.category.create({
+      data: { name: "Uncategorized", slug: "uncategorized", image: "" }
+    });
+  }
+
+  // Prevent deleting the default category
+  if (id === uncategorized.id) {
+    throw new Error("Cannot delete the default category.");
+  }
+
+  // 2. Move products to "Uncategorized"
+  await prisma.product.updateMany({
+    where: { categoryId: id },
+    data: { categoryId: uncategorized.id }
+  });
+
+  // 3. Delete the category
+  await prisma.category.delete({
+    where: { id },
+  });
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+}
+
 export async function createCategory(name: string, slug: string) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
