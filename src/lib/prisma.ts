@@ -7,7 +7,11 @@ import ws from 'ws';
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const connectionString = process.env.DATABASE_URL!;
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  throw new Error("DATABASE_URL is missing from environment variables. Please check your .env file.");
+}
 
 // Determine if we are using Neon (cloud) or local Postgres
 const isNeon = connectionString.includes('neon.tech');
