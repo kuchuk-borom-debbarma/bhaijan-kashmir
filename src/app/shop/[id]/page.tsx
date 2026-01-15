@@ -45,19 +45,17 @@ export default async function ProductPage({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 mb-20">
         {/* Product Image */}
         <div className="relative aspect-square bg-stone-100 rounded-2xl overflow-hidden shadow-sm">
-           {/* Placeholder for real image */}
-           <div className="absolute inset-0 flex items-center justify-center text-stone-300 text-6xl">
-             🏔️
-           </div>
-           {/* 
-           <Image 
-             src={product.image} 
-             alt={product.name} 
-             fill 
-             className="object-cover"
-             priority
-           /> 
-           */}
+           {product.image ? (
+             <img 
+               src={product.image} 
+               alt={product.name} 
+               className="w-full h-full object-cover"
+             /> 
+           ) : (
+             <div className="absolute inset-0 flex items-center justify-center text-stone-300 text-6xl">
+               🏔️
+             </div>
+           )}
         </div>
 
         {/* Product Details */}
@@ -124,9 +122,17 @@ export default async function ProductPage({
               <div key={p.id} className="group">
                 <Link href={`/shop/${p.id}`}>
                   <div className="aspect-square bg-stone-100 rounded-xl overflow-hidden mb-4 relative">
-                     <div className="absolute inset-0 flex items-center justify-center text-stone-300 text-2xl">
-                       🏔️
-                     </div>
+                     {p.image ? (
+                        <img 
+                          src={p.image} 
+                          alt={p.name} 
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                     ) : (
+                       <div className="absolute inset-0 flex items-center justify-center text-stone-300 text-2xl">
+                         🏔️
+                       </div>
+                     )}
                   </div>
                   <h3 className="font-serif font-bold text-lg text-walnut group-hover:text-kashmir-red transition-colors">
                     {p.name}
