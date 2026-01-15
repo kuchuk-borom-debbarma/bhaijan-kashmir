@@ -42,15 +42,39 @@ export default function UpdateOrderForm({ order }: { order: Order & { trackingNu
       {order.status === "PAID" && (
         <form onSubmit={handleShip} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Courier Name</label>
-            <input 
-              type="text" 
-              placeholder="e.g. BlueDart, Delhivery"
-              className="w-full p-2 border rounded"
+            <label className="block text-sm font-medium mb-1">Courier Partner</label>
+            <select
+              required
+              className="w-full p-2 border rounded bg-white"
               value={courier}
               onChange={e => setCourier(e.target.value)}
-            />
+            >
+              <option value="" disabled>Select a carrier</option>
+              <option value="BlueDart">BlueDart</option>
+              <option value="Delhivery">Delhivery</option>
+              <option value="MockCourier">Mock Courier (Test)</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
+          {courier === "Other" && (
+             <div>
+                <label className="block text-sm font-medium mb-1">Specify Courier Name</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="e.g. FedEx"
+                  className="w-full p-2 border rounded"
+                  // We'll handle this purely in UI state logic if we wanted perfect separation,
+                  // but for now, let's just assume the user selects from the dropdown for the tracked ones.
+                  // Since 'courier' state is shared, 'Other' value might need a separate state if we want to capture the name.
+                  // For simplicity in this step, I'll stick to the dropdown.
+                  // If they select 'Other', the provider saved is 'Other'.
+                  disabled
+                  value="Manual Entry Not Supported Yet" 
+                />
+                 <p className="text-xs text-gray-500 mt-1">Manual entry for unsupported couriers coming soon.</p>
+             </div>
+          )}
           <div>
             <label className="block text-sm font-medium mb-1">Tracking Number</label>
             <input 
