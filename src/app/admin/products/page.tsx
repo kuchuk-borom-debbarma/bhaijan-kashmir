@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Plus, Edit, Trash2, Star } from "lucide-react";
-import { deleteProduct } from "../actions";
-import { revalidatePath } from "next/cache";
+import { Plus, Edit, Star } from "lucide-react";
+import DeleteProductButton from "./DeleteProductButton";
 
 export default async function AdminProductsPage() {
   const products = await prisma.product.findMany({
@@ -61,21 +60,7 @@ export default async function AdminProductsPage() {
                     >
                       <Edit className="w-4 h-4" />
                     </Link>
-                    <form action={async () => {
-                      "use server";
-                      await deleteProduct(product.id);
-                    }}>
-                      <button
-                        type="submit"
-                        className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        onClick={(e) => {
-                          // This won't work easily in a server component form action without JS
-                          // but since it's admin, we can rely on basic confirm or just delete.
-                        }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </form>
+                    <DeleteProductButton id={product.id} />
                   </div>
                 </td>
               </tr>

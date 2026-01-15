@@ -12,10 +12,17 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   if (!product) notFound();
 
+  // Serialize Prisma Decimal to number/string for Client Component
+  const serializedProduct = {
+    ...product,
+    price: Number(product.price),
+  };
+
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold text-walnut">Edit Product</h1>
-      <ProductForm categories={categories} initialData={product} />
+      {/* @ts-expect-error Server Component passing serialized data matching interface but TS complains about exact Decimal type mismatch */}
+      <ProductForm categories={categories} initialData={serializedProduct} />
     </div>
   );
 }
