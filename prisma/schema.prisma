@@ -81,8 +81,11 @@ model Order {
   status          OrderStatus @default(PENDING)
 
   // Payment Details
-  paymentId       String? // External Transaction ID from the provider
+  paymentId       String? // External Transaction ID (e.g. pay_2938942)
+  paymentOrderId  String? // External Order ID (e.g. order_2384923)
   paymentProvider String  @default("mock") // "stripe", "razorpay", "mock"
+  currency        String  @default("INR")
+  paymentMetadata Json?   // Raw response from provider (card info, fees, etc)
 
   // Shipping Details - Deprecated in favor of Shipment model, but kept for backward compatibility if needed
   shippingAddress String  @db.Text
