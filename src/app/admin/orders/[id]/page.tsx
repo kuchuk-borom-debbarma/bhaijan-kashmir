@@ -21,6 +21,20 @@ export default async function AdminOrderDetailsPage({ params }: { params: Promis
 
   if (!order) notFound();
 
+  // Serialize Prisma Decimal to number/string for Client Component
+  const serializedOrder = {
+    ...order,
+    total: Number(order.total),
+    items: order.items.map(item => ({
+      ...item,
+      price: Number(item.price),
+      product: {
+        ...item.product,
+        price: Number(item.product.price)
+      }
+    }))
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       {/* ... Header ... */}
@@ -80,7 +94,8 @@ export default async function AdminOrderDetailsPage({ params }: { params: Promis
         </div>
 
         <div>
-          <UpdateOrderForm order={order} />
+          {/* @ts-expect-error Serialized types mismatch with Prisma types but needed for Client Component */}
+          <UpdateOrderForm order={serializedOrder} />
         </div>
       </div>
     </div>
