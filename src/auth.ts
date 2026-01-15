@@ -59,10 +59,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async session({ session, token }) {
       if (token.sub && session.user) {
-        session.user.id = token.sub;
-      }
-      if (token.role && session.user) {
-        session.user.role = token.role as "ADMIN" | "USER";
+        // Validation: Check if user actually exists in DB (handles DB resets)
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { id: true, role: true }
+        });
+
+        if (!dbUser) {
+          // User in token doesn't exist in DB -> Invalidate session
+          return { expires: session.expires } as any;
+        }
+
+        session.user.id = dbUser.id;
+        session.user.role = dbUser.role;
       }
       return session;
     },
