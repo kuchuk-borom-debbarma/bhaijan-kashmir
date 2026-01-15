@@ -17,26 +17,23 @@ if (!connectionString) {
 // Debug Log (First 20 chars only for safety)
 console.log(`[DB Config] URL Start: ${connectionString.substring(0, 20)}...`);
 
-// Determine if we are using Neon (cloud) or local Postgres
-// STRICT CHECK: Only use Neon adapter if it's neon.tech AND NOT localhost
-const isNeon = connectionString.includes('neon.tech') && !connectionString.includes('localhost') && !connectionString.includes('127.0.0.1');
+// Explicitly control adapter usage. Default to false (Standard TCP) for stability.
+// Only enable this in production serverless environments.
+const useNeonAdapter = process.env.USE_NEON_ADAPTER === "true";
 
-console.log(`[DB Config] Mode: ${isNeon ? 'Neon (Serverless)' : 'Local (Standard)'}`);
+console.log(`[DB Config] Adapter: ${useNeonAdapter ? 'Neon (Serverless/WS)' : 'Standard (TCP)'}`);
 
 let adapter;
 
 try {
-  if (isNeon) {
+  if (useNeonAdapter) {
     neonConfig.webSocketConstructor = ws;
     const pool = new NeonPool({ connectionString });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     adapter = new PrismaNeon(pool as any);
-    console.log('🔌 Connected to Neon DB');
   } else {
-    // Explicitly pass connectionString to Pool
-    const pool = new Pool({ connectionString });
-    adapter = new PrismaPg(pool);
-    console.log('💻 Connected to Local Postgres');
+    // Standard Prisma Client (no adapter needed for TCP)
+    // We leave adapter undefined to let PrismaClient use its built-in engine
   }
 } catch (err) {
   console.error("Failed to initialize database adapter:", err);
