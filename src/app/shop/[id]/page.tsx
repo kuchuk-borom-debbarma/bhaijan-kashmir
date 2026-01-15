@@ -4,12 +4,45 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Check, Truck, ShieldCheck } from "lucide-react";
 import AddToCartButton from "@/components/AddToCartButton";
+import { Metadata } from "next";
+
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata(
+  { params }: Props,
+): Promise<Metadata> {
+  const { id } = await params;
+  const product = await prisma.product.findUnique({ where: { id } });
+
+  if (!product) {
+    return {
+      title: "Product Not Found",
+    };
+  }
+
+  return {
+    title: product.name,
+    description: product.description.slice(0, 160), // SEO friendly length
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      images: [
+        {
+          url: product.image || "/og-image.jpg",
+          width: 800,
+          height: 800,
+          alt: product.name,
+        },
+      ],
+    },
+  };
+}
 
 export default async function ProductPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+}: Props) {
   const { id } = await params;
 
   const product = await prisma.product.findUnique({

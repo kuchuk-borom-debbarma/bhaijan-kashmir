@@ -17,8 +17,31 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Bhaijan Kashmir | Authentic Kashmiri Saffron & Handicrafts",
+  title: {
+    default: "Bhaijan Kashmir | Authentic Kashmiri Saffron & Handicrafts",
+    template: "%s | Bhaijan Kashmir",
+  },
   description: "Experience the pure essence of Kashmir. Premium saffron, dry fruits, and traditional handicrafts delivered to your doorstep.",
+  keywords: ["Kashmir", "Saffron", "Pashmina", "Dry Fruits", "Walnuts", "Organic", "Handicrafts"],
+  authors: [{ name: "Bhaijan Kashmir" }],
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://bhaijankashmir.com",
+    siteName: "Bhaijan Kashmir",
+    images: [
+      {
+        url: "/og-image.jpg", // You should add a default OG image to public/ folder
+        width: 1200,
+        height: 630,
+        alt: "Bhaijan Kashmir - Nature's Finest Gifts",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@bhaijankashmir", // Placeholder
+  },
 };
 
 export default async function RootLayout({
