@@ -60,3 +60,30 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus, tr
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
 }
+
+export async function addShipmentEvent(shipmentId: string, eventData: { status: string, location: string, description: string }) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") {
+    throw new Error("Unauthorized");
+  }
+
+  await prisma.shipmentEvent.create({
+    data: {
+      shipmentId,
+      status: eventData.status,
+      location: eventData.location,
+      description: eventData.description
+    }
+  });
+
+  // Find the order ID to revalidate
+  const shipment = await prisma.shipment.findUnique({
+    where: { id: shipmentId },
+    select: { orderId: true }
+  });
+
+  if (shipment) {
+    revalidatePath(`/admin/orders/${shipment.orderId}`);
+    revalidatePath(`/profile/orders/${shipment.orderId}`);
+  }
+}

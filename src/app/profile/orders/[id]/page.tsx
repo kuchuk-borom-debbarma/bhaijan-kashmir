@@ -15,7 +15,11 @@ export default async function OrderTrackingPage({ params }: { params: Promise<{ 
     where: { id: id },
     include: {
       items: { include: { product: true } },
-      shipment: true
+      shipment: {
+        include: {
+          events: { orderBy: { timestamp: "desc" } }
+        }
+      }
     }
   });
 
@@ -24,6 +28,10 @@ export default async function OrderTrackingPage({ params }: { params: Promise<{ 
   }
 
   let trackingResult = null;
+  // Use Resolver only if we don't have enough info, OR to augment
+  // Logic: If provider is "Manual", use only DB events.
+  // If provider is "BlueDart", maybe fetch API.
+  // For now, let's prioritize API if available, but show DB events as "Updates".
   if (order.shipment) {
     const resolver = ShipmentFactory.getResolver(order.shipment.provider);
     trackingResult = await resolver.resolve({
@@ -135,6 +143,28 @@ export default async function OrderTrackingPage({ params }: { params: Promise<{ 
                       </a>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Manual Events History */}
+              {order.shipment.events && order.shipment.events.length > 0 && (
+                <div className="border-t border-stone-100 pt-6 mt-6">
+                   <h3 className="font-bold text-walnut mb-4">Shipment Progress</h3>
+                   <div className="space-y-6 border-l-2 border-stone-200 ml-2 pb-2">
+                      {order.shipment.events.map((event) => (
+                        <div key={event.id} className="relative pl-6">
+                           <div className="absolute -left-[7px] top-1.5 w-3 h-3 bg-stone-300 rounded-full border-2 border-white"></div>
+                           <div>
+                              <p className="font-bold text-sm text-walnut">{event.status}</p>
+                              <p className="text-xs text-stone-500">{new Date(event.timestamp).toLocaleString()}</p>
+                              <p className="text-sm text-stone-600 mt-1">
+                                {event.location && <span className="font-medium mr-1">{event.location}:</span>}
+                                {event.description}
+                              </p>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
                 </div>
               )}
             </div>
