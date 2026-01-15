@@ -36,19 +36,17 @@ export class MockPaymentProvider implements PaymentProvider {
 
     // Simulating database update logic here for demonstration:
     if (body.event === "payment_success" && body.orderId) {
-      console.log(`[MockPayment] Webhook confirmed payment for Order ${body.orderId}`);
-      
-      // Import prisma dynamically to avoid circular dependencies if any
-      const { prisma } = await import("@/lib/prisma");
-      
-      await prisma.order.update({
-        where: { id: body.orderId },
-        data: { 
-          status: "PAID",
-          paymentId: body.paymentId || "webhook_recovered_id"
+      try {
+        const { finalizeOrderPayment } = await import("@/lib/orders");
+        const result = await finalizeOrderPayment(body.orderId, body.paymentId || "webhook_recovered_id");
+        
+        if (result.success) {
+          console.log(`[MockPayment] Webhook confirmed payment for Order ${body.orderId}`);
         }
-      });
-      return true;
+        return true;
+      } catch (err) {
+        console.error("[MockPayment] Webhook update failed:", err);
+      }
     }
 
     return false;

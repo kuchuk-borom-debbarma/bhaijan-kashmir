@@ -102,16 +102,13 @@ export class RazorpayProvider implements PaymentProvider {
       const razorpayPaymentId = payment.id;
 
       if (orderId) {
-        const { prisma } = await import("@/lib/prisma");
         try {
-          await prisma.order.update({
-            where: { id: orderId },
-            data: {
-              status: "PAID",
-              paymentId: razorpayPaymentId,
-            },
-          });
-          console.log(`[Razorpay Webhook] Order ${orderId} marked as PAID`);
+          const { finalizeOrderPayment } = await import("@/lib/orders");
+          const result = await finalizeOrderPayment(orderId, razorpayPaymentId);
+          
+          if (result.success) {
+            console.log(`[Razorpay Webhook] Order ${orderId} processed successfully (Already paid: ${result.alreadyProcessed})`);
+          }
           return true;
         } catch (dbError) {
           console.error("[Razorpay Webhook] Database update failed:", dbError);

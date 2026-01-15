@@ -1,13 +1,18 @@
 "use server";
 
 import { auth } from "@/auth";
+
 import { prisma } from "@/lib/prisma";
+
 import { PaymentFactory } from "@/lib/payment/factory";
+
 import { OrderStatus } from "@prisma/client";
-import { revalidatePath } from "next/cache";
+
 import { checkoutSchema } from "@/lib/schemas";
+
 import { checkRateLimit } from "@/lib/rate-limit";
-import { NotificationFactory } from "@/lib/notifications/factory";
+
+import { finalizeOrderPayment } from "@/lib/orders";
 
 export async function createOrder(formData: { address: string }) {
   const session = await auth();
@@ -108,25 +113,8 @@ export async function verifyOrderPayment(data: {
   });
 
   if (isValid) {
-    const updatedOrder = await prisma.order.update({
-      where: { id: data.orderId },
-      data: {
-        status: OrderStatus.PAID,
-        paymentId: data.paymentId,
-      },
-      include: { user: true },
-    });
-    
-    // Send Confirmation Notification
-    await NotificationFactory.getProvider().send({
-      to: updatedOrder.user.email,
-      subject: `Order Confirmation #${updatedOrder.id.slice(-8)}`,
-      body: `Thank you for your purchase! Your order of ₹${updatedOrder.total} has been confirmed.`,
-      type: "ORDER_CONFIRMATION",
-    });
-
-    revalidatePath("/profile");
-    return { success: true };
+    const result = await finalizeOrderPayment(data.orderId, data.paymentId);
+    return { success: result.success };
   }
 
   return { success: false };
