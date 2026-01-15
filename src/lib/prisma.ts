@@ -10,26 +10,28 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
-  throw new Error("DATABASE_URL is missing from environment variables. Please check your .env file.");
+  throw new Error("DATABASE_URL is missing from environment variables.");
 }
 
-// Determine if we are using Neon (cloud) or local Postgres
 const isNeon = connectionString.includes('neon.tech');
 
 let adapter;
 
-if (isNeon) {
-  // Configure Neon for serverless environments
-  neonConfig.webSocketConstructor = ws;
-  const pool = new NeonPool({ connectionString });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  adapter = new PrismaNeon(pool as any);
-  console.log('🔌 Connected to Neon DB');
-} else {
-  // Use standard Postgres driver for local development
-  const pool = new Pool({ connectionString });
-  adapter = new PrismaPg(pool);
-  console.log('💻 Connected to Local Postgres');
+try {
+  if (isNeon) {
+    neonConfig.webSocketConstructor = ws;
+    const pool = new NeonPool({ connectionString });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    adapter = new PrismaNeon(pool as any);
+    console.log('🔌 Connected to Neon DB');
+  } else {
+    const pool = new Pool({ connectionString });
+    adapter = new PrismaPg(pool);
+    console.log('💻 Connected to Local Postgres');
+  }
+} catch (err) {
+  console.error("Failed to initialize database adapter:", err);
+  throw err;
 }
 
 export const prisma =
