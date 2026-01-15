@@ -42,6 +42,6 @@ try {
 
 export const prisma =
   globalForPrisma.prisma ||
-  new PrismaClient({ adapter });
+  new PrismaClient(adapter ? { adapter } : undefined);
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
