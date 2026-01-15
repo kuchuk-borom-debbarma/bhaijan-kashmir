@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Package, Users, Settings } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Users, Settings } from "lucide-react";
 
 export default async function AdminLayout({
   children,
@@ -17,6 +17,7 @@ export default async function AdminLayout({
 
   const navItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { label: "Products", href: "/admin/products", icon: ShoppingBag },
     { label: "Orders", href: "/admin/orders", icon: Package },
     // { label: "Customers", href: "/admin/users", icon: Users },
     // { label: "Settings", href: "/admin/settings", icon: Settings },

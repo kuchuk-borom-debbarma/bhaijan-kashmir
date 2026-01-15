@@ -87,3 +87,59 @@ export async function addShipmentEvent(shipmentId: string, eventData: { status: 
     revalidatePath(`/profile/orders/${shipment.orderId}`);
   }
 }
+
+import { ProductFormData } from "@/lib/schemas";
+
+export async function createProduct(data: ProductFormData) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
+
+  const product = await prisma.product.create({
+    data: {
+      name: data.name,
+      description: data.description,
+      price: data.price,
+      image: data.image,
+      featured: data.featured,
+      categoryId: data.categoryId,
+    },
+  });
+
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+  return product;
+}
+
+export async function updateProduct(id: string, data: ProductFormData) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
+
+  const product = await prisma.product.update({
+    where: { id },
+    data: {
+      name: data.name,
+      description: data.description,
+      price: data.price,
+      image: data.image,
+      featured: data.featured,
+      categoryId: data.categoryId,
+    },
+  });
+
+  revalidatePath("/admin/products");
+  revalidatePath(`/shop/${id}`);
+  revalidatePath("/shop");
+  return product;
+}
+
+export async function deleteProduct(id: string) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
+
+  await prisma.product.delete({
+    where: { id },
+  });
+
+  revalidatePath("/admin/products");
+  revalidatePath("/shop");
+}
