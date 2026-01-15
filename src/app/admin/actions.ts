@@ -12,6 +12,22 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus, tr
     throw new Error("Unauthorized");
   }
 
+  // Create Shipment Record if Shipping
+  if (status === "SHIPPED" && trackingData) {
+    await prisma.shipment.upsert({
+      where: { orderId: orderId },
+      update: {
+        provider: trackingData.courier,
+        trackingNumber: trackingData.trackingNumber,
+      },
+      create: {
+        orderId: orderId,
+        provider: trackingData.courier,
+        trackingNumber: trackingData.trackingNumber,
+      }
+    });
+  }
+
   const order = await prisma.order.update({
     where: { id: orderId },
     data: {
