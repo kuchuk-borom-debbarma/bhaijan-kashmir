@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createProduct, updateProduct } from "../actions";
-import { Loader2, Save, X, Upload } from "lucide-react";
+import { createProduct, updateProduct, createCategory } from "../actions";
+import { Loader2, Save, X, Upload, Plus } from "lucide-react";
 import { Category, Product } from "@prisma/client";
 
 interface ProductFormProps {
@@ -26,6 +26,30 @@ export default function ProductForm({ categories, initialData }: ProductFormProp
   });
 
   const [file, setFile] = useState<File | null>(null);
+  
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName) return;
+    setLoading(true);
+    try {
+      const slug = newCategoryName.toLowerCase().replace(/ /g, "-");
+      const newCat = await createCategory(newCategoryName, slug);
+      setFormData({ ...formData, categoryId: newCat.id });
+      setIsCreatingCategory(false);
+      setNewCategoryName("");
+      // Force refresh to get new category in list? 
+      // Ideally we'd update local state 'categories' but props are immutable. 
+      // We rely on router.refresh() but that might be slow.
+      // Better: reload page or optimistically append to list if we could.
+      router.refresh(); 
+    } catch (err: unknown) {
+      alert("Failed to create category");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,19 +101,56 @@ export default function ProductForm({ categories, initialData }: ProductFormProp
 
         <div className="space-y-2">
           <label className="text-sm font-bold text-walnut">Category</label>
-          <select
-            required
-            className="w-full p-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-kashmir-red outline-none bg-white"
-            value={formData.categoryId}
-            onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-          >
-            <option value="" disabled>Select a Category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          {isCreatingCategory ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                className="flex-1 p-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-kashmir-red outline-none"
+                placeholder="New Category Name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+              />
+              <button 
+                type="button"
+                onClick={handleCreateCategory}
+                disabled={loading}
+                className="bg-kashmir-green text-white px-4 rounded-lg hover:bg-green-700"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              </button>
+              <button 
+                type="button"
+                onClick={() => setIsCreatingCategory(false)}
+                className="bg-stone-100 text-stone-600 px-4 rounded-lg hover:bg-stone-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <select
+                required
+                className="flex-1 p-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-kashmir-red outline-none bg-white"
+                value={formData.categoryId}
+                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              >
+                <option value="" disabled>Select a Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <button 
+                type="button"
+                onClick={() => setIsCreatingCategory(true)}
+                className="bg-stone-100 text-walnut px-4 rounded-lg hover:bg-stone-200 flex items-center justify-center"
+                title="Create New Category"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

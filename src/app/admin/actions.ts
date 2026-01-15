@@ -90,6 +90,23 @@ export async function addShipmentEvent(shipmentId: string, eventData: { status: 
 
 import { StorageFactory } from "@/lib/storage/factory";
 
+export async function createCategory(name: string, slug: string) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
+
+  const category = await prisma.category.create({
+    data: {
+      name,
+      slug,
+      image: "", // Optional or placeholder
+    },
+  });
+
+  revalidatePath("/admin/products/new");
+  revalidatePath("/admin/products");
+  return category;
+}
+
 export async function createProduct(formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
