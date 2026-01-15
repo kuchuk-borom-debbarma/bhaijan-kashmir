@@ -88,7 +88,6 @@ export async function addShipmentEvent(shipmentId: string, eventData: { status: 
   }
 }
 
-import { ProductFormData } from "@/lib/schemas";
 import { StorageFactory } from "@/lib/storage/factory";
 
 export async function createProduct(formData: FormData) {
