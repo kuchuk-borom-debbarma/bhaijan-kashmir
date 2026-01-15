@@ -113,7 +113,14 @@ export async function verifyOrderPayment(data: {
   });
 
   if (isValid) {
-    const result = await finalizeOrderPayment(data.orderId, data.paymentId);
+    const result = await finalizeOrderPayment(
+      data.orderId, 
+      data.paymentId, 
+      data.providerOrderId,
+      // Metadata could be passed here if available from client response, 
+      // but usually we rely on webhook for full metadata.
+      undefined 
+    );
     return { success: result.success };
   }
 

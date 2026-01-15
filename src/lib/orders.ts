@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
  * Safely marks an order as PAID and sends confirmation notifications.
  * Handles race conditions by ensuring the update only happens if status is PENDING.
  */
-export async function finalizeOrderPayment(orderId: string, paymentId: string) {
+export async function finalizeOrderPayment(orderId: string, paymentId: string, paymentOrderId?: string, paymentMetadata?: any) {
   // 1. Atomically update only if status is PENDING
   const updateResult = await prisma.order.updateMany({
     where: { 
@@ -17,6 +17,8 @@ export async function finalizeOrderPayment(orderId: string, paymentId: string) {
     data: {
       status: OrderStatus.PAID,
       paymentId: paymentId,
+      paymentOrderId: paymentOrderId,
+      paymentMetadata: paymentMetadata,
     },
   });
 

@@ -100,11 +100,17 @@ export class RazorpayProvider implements PaymentProvider {
       const payment = event.payload.payment.entity;
       const orderId = payment.notes.internal_order_id;
       const razorpayPaymentId = payment.id;
+      const razorpayOrderId = payment.order_id;
 
       if (orderId) {
         try {
           const { finalizeOrderPayment } = await import("@/lib/orders");
-          const result = await finalizeOrderPayment(orderId, razorpayPaymentId);
+          const result = await finalizeOrderPayment(
+            orderId, 
+            razorpayPaymentId,
+            razorpayOrderId,
+            payment // Save the full payment object as metadata
+          );
           
           if (result.success) {
             console.log(`[Razorpay Webhook] Order ${orderId} processed successfully (Already paid: ${result.alreadyProcessed})`);
