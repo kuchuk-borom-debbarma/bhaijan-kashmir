@@ -88,8 +88,6 @@ export async function addShipmentEvent(shipmentId: string, eventData: { status: 
   }
 }
 
-import { StorageFactory } from "@/lib/storage/factory";
-
 export async function createCategory(name: string, slug: string) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
@@ -121,12 +119,8 @@ export async function createProduct(formData: FormData) {
     throw new Error("Category is required. Please create or select a category.");
   }
 
-  let imageUrl = formData.get("image") as string;
-  const imageFile = formData.get("imageFile") as File;
-
-  if (imageFile && imageFile.size > 0) {
-    imageUrl = await StorageFactory.getProvider().upload(imageFile);
-  }
+  // Assuming 'image' field in formData now contains the URL string
+  const imageUrl = formData.get("image") as string;
 
   const product = await prisma.product.create({
     data: {
@@ -154,12 +148,8 @@ export async function updateProduct(id: string, formData: FormData) {
   const categoryId = formData.get("categoryId") as string;
   const featured = formData.get("featured") === "true";
   
-  let imageUrl = formData.get("image") as string;
-  const imageFile = formData.get("imageFile") as File;
-
-  if (imageFile && imageFile.size > 0) {
-    imageUrl = await StorageFactory.getProvider().upload(imageFile);
-  }
+  // Assuming 'image' field in formData now contains the URL string
+  const imageUrl = formData.get("image") as string;
 
   const product = await prisma.product.update({
     where: { id },

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, createCategory } from "../actions";
-import { Loader2, Save, X, Upload, Plus } from "lucide-react";
+import { Loader2, Save, X, Plus } from "lucide-react";
 import { Category, Product } from "@prisma/client";
 
 interface ProductFormProps {
@@ -25,8 +25,6 @@ export default function ProductForm({ categories, initialData }: ProductFormProp
     categoryId: initialData?.categoryId || (categories.length > 0 ? categories[0].id : ""),
   });
 
-  const [file, setFile] = useState<File | null>(null);
-  
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
@@ -61,14 +59,10 @@ export default function ProductForm({ categories, initialData }: ProductFormProp
       data.append("name", formData.name);
       data.append("description", formData.description);
       data.append("price", formData.price);
-      data.append("image", formData.image); // URL fallback
+      data.append("image", formData.image);
       data.append("categoryId", formData.categoryId);
       data.append("featured", String(formData.featured));
       
-      if (file) {
-        data.append("imageFile", file);
-      }
-
       if (initialData) {
         await updateProduct(initialData.id, data);
       } else {
@@ -167,37 +161,16 @@ export default function ProductForm({ categories, initialData }: ProductFormProp
         </div>
         
         <div className="space-y-2">
-           <label className="text-sm font-bold text-walnut">Product Image</label>
-           <div className="flex gap-2 items-center">
-             <input
-               type="text"
-               className="flex-1 p-3 rounded-lg border border-stone-200 text-sm"
-               value={formData.image}
-               onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-               placeholder="Enter URL or upload file..."
-             />
-             <div className="relative">
-               <input 
-                 type="file" 
-                 accept="image/*"
-                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                 onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                        setFile(e.target.files[0]);
-                        // Preview hack
-                        setFormData({ ...formData, image: URL.createObjectURL(e.target.files[0]) });
-                    }
-                 }}
-               />
-               <button type="button" className="p-3 bg-stone-100 rounded-lg hover:bg-stone-200 transition-colors">
-                  <Upload className="w-5 h-5 text-stone-600" />
-               </button>
-             </div>
-           </div>
-           {file && <p className="text-xs text-green-600">File selected: {file.name}</p>}
+           <label className="text-sm font-bold text-walnut">Product Image URL</label>
+           <input
+             type="text"
+             className="w-full p-3 rounded-lg border border-stone-200 text-sm"
+             value={formData.image}
+             onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+             placeholder="https://example.com/image.jpg"
+           />
         </div>
       </div>
-
       <div className="space-y-2">
         <label className="text-sm font-bold text-walnut">Description</label>
         <textarea
