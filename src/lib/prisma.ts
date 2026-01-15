@@ -32,8 +32,10 @@ try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     adapter = new PrismaNeon(pool as any);
   } else {
-    // Standard Prisma Client (no adapter needed for TCP)
-    // We leave adapter undefined to let PrismaClient use its built-in engine
+    // Use PrismaPg adapter for standard connections (Local/Production TCP)
+    // This satisfies the client requirement for an adapter
+    const pool = new Pool({ connectionString });
+    adapter = new PrismaPg(pool);
   }
 } catch (err) {
   console.error("Failed to initialize database adapter:", err);
@@ -42,6 +44,6 @@ try {
 
 export const prisma =
   globalForPrisma.prisma ||
-  (adapter ? new PrismaClient({ adapter }) : new PrismaClient());
+  new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
