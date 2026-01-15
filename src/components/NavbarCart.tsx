@@ -9,7 +9,10 @@ export default function NavbarCart() {
   
   // Hydration fix
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => setIsMounted(true), []);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const itemCount = isMounted ? items.reduce((total, item) => total + item.quantity, 0) : 0;
 

@@ -85,7 +85,7 @@ export default async function Home() {
               <span className="text-kashmir-green font-bold tracking-wider uppercase text-sm">Why Choose Us</span>
               <h2 className="font-serif text-3xl md:text-4xl font-bold text-walnut">Authenticity in Every Grain</h2>
               <p className="text-stone-600 leading-relaxed">
-                Bhaijan Kashmir is not just a brand; it's a promise of purity. We source our Saffron directly from the fields of Pampore and our dry fruits from the orchards of Sopore.
+                Bhaijan Kashmir is not just a brand; it&apos;s a promise of purity. We source our Saffron directly from the fields of Pampore and our dry fruits from the orchards of Sopore.
               </p>
               
               <ul className="space-y-4 pt-4">

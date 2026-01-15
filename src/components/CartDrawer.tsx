@@ -12,7 +12,10 @@ export default function CartDrawer() {
   
   // Hydration fix: persist middleware needs to rehydrate on client
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => setIsMounted(true), []);
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!isMounted) return null;
 

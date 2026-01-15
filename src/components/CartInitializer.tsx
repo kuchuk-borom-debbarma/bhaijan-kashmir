@@ -17,7 +17,13 @@ export default function CartInitializer({ userId }: CartInitializerProps) {
       setHydrated(true);
     });
 
-    setHydrated(useCartStore.persist.hasHydrated());
+    if (useCartStore.persist.hasHydrated()) {
+      const timer = setTimeout(() => setHydrated(true), 0);
+      return () => {
+        unsubFinishHydration();
+        clearTimeout(timer);
+      };
+    }
 
     return () => {
       unsubFinishHydration();

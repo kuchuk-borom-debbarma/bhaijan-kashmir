@@ -55,7 +55,7 @@ export default function SignInForm() {
         </button>
 
         <p className="text-center text-sm text-stone-500 mt-4">
-            Don't have an account? <Link href="/auth/sign-up" className="text-kashmir-green font-medium hover:underline">Sign Up</Link>
+            Don&apos;t have an account? <Link href="/auth/sign-up" className="text-kashmir-green font-medium hover:underline">Sign Up</Link>
         </p>
       </form>
     </div>

@@ -15,7 +15,7 @@ export interface PaymentOrderResponse {
   amount: number;
   currency: string;
   clientSecret?: string; // For Stripe-like flows
-  providerSpecificData?: Record<string, any>; // For Razorpay-like frontend SDKs
+  providerSpecificData?: Record<string, unknown>; // For Razorpay-like frontend SDKs
 }
 
 export interface PaymentVerificationRequest {

@@ -2,7 +2,16 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Package, CreditCard, Truck, AlertCircle } from "lucide-react";
 
-async function StatCard({ title, value, icon: Icon, color }: any) {
+import { LucideIcon } from "lucide-react";
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: LucideIcon;
+  color: string;
+}
+
+async function StatCard({ title, value, icon: Icon, color }: StatCardProps) {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border flex items-center justify-between">
       <div>

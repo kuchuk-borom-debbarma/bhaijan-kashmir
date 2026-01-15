@@ -19,7 +19,7 @@ export default function SignUpForm() {
         </div>
         <h3 className="font-serif text-2xl font-bold text-walnut mb-2">Check your inbox</h3>
         <p className="text-stone-600 mb-6">
-          We've sent a magic link to your email. Click it to complete your registration.
+          We&apos;ve sent a magic link to your email. Click it to complete your registration.
         </p>
         <p className="text-sm text-stone-500">
           (For this demo, check your server console)

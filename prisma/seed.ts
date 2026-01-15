@@ -14,6 +14,7 @@ let adapter;
 if (isNeon) {
   neonConfig.webSocketConstructor = ws;
   const pool = new NeonPool({ connectionString });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adapter = new PrismaNeon(pool as any);
   console.log('🌱 Seeding Neon DB...');
 } else {
@@ -22,6 +23,7 @@ if (isNeon) {
   console.log('🌱 Seeding Local Postgres...');
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const prisma = new PrismaClient({ adapter } as any);
 
 async function main() {

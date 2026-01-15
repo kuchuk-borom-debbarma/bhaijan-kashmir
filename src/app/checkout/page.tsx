@@ -8,9 +8,9 @@ import { Loader2 } from "lucide-react";
 
 declare global {
   interface Window {
-    Razorpay: new (options: any) => { 
+    Razorpay: new (options: Record<string, unknown>) => { 
       open: () => void;
-      on: (event: string, handler: (response: any) => void) => void;
+      on: (event: string, handler: (response: unknown) => void) => void;
     };
   }
 }
@@ -101,8 +101,9 @@ export default function CheckoutPage() {
         };
 
         const rzp = new window.Razorpay(options);
-        rzp.on("payment.failed", function (response: any) {
-            setErrorMessage(`Payment failed: ${response.error.description}`);
+        rzp.on("payment.failed", function (response: unknown) {
+            const errorDesc = (response as { error: { description: string } })?.error?.description || "Payment Failed";
+            setErrorMessage(`Payment failed: ${errorDesc}`);
             setIsLoading(false);
         });
         rzp.open();

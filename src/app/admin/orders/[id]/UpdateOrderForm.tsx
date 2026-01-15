@@ -4,7 +4,9 @@ import { useState } from "react";
 import { updateOrderStatus } from "../../actions";
 import { Loader2 } from "lucide-react";
 
-export default function UpdateOrderForm({ order }: { order: any }) {
+import { Order } from "@prisma/client";
+
+export default function UpdateOrderForm({ order }: { order: Order & { trackingNumber?: string | null; courier?: string | null } }) {
   const [loading, setLoading] = useState(false);
   const [courier, setCourier] = useState(order.courier || "");
   const [tracking, setTracking] = useState(order.trackingNumber || "");

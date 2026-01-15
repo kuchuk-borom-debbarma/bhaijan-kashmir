@@ -7,7 +7,7 @@ export default function ContactPage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <h1 className="font-serif text-4xl md:text-5xl font-bold text-walnut mb-4">Get in Touch</h1>
-          <p className="text-stone-500">We'd love to hear from you. Send us a message or visit us in Srinagar.</p>
+          <p className="text-stone-500">We&apos;d love to hear from you. Send us a message or visit us in Srinagar.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
