@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import Link from 'next/link';
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -47,6 +48,15 @@ export default async function ProfilePage() {
                     <dd className="text-walnut">{new Date(user.createdAt).toLocaleDateString()}</dd>
                 </div>
             </dl>
+            
+            <div className="mt-8 pt-6 border-t border-stone-100">
+              <Link 
+                href="/profile/orders" 
+                className="inline-flex items-center justify-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-kashmir-red hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-kashmir-red transition-colors w-full sm:w-auto"
+              >
+                View Order History
+              </Link>
+            </div>
         </div>
       </div>
     </main>

@@ -1,6 +1,6 @@
 'use client';
 
-import { User, LogOut, UserCircle } from 'lucide-react';
+import { User, LogOut, UserCircle, Package } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { signOutAction } from '@/app/auth/actions';
@@ -61,6 +61,15 @@ export default function UserMenu({ user }: UserMenuProps) {
           >
             <UserCircle className="w-4 h-4" />
             Profile
+          </Link>
+
+          <Link
+            href="/profile/orders"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors"
+          >
+            <Package className="w-4 h-4" />
+            My Orders
           </Link>
 
           <button
