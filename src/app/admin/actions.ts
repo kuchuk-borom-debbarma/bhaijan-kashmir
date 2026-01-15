@@ -89,19 +89,33 @@ export async function addShipmentEvent(shipmentId: string, eventData: { status: 
 }
 
 import { ProductFormData } from "@/lib/schemas";
+import { StorageFactory } from "@/lib/storage/factory";
 
-export async function createProduct(data: ProductFormData) {
+export async function createProduct(formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
 
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const price = Number(formData.get("price"));
+  const categoryId = formData.get("categoryId") as string;
+  const featured = formData.get("featured") === "true";
+  
+  let imageUrl = formData.get("image") as string;
+  const imageFile = formData.get("imageFile") as File;
+
+  if (imageFile && imageFile.size > 0) {
+    imageUrl = await StorageFactory.getProvider().upload(imageFile);
+  }
+
   const product = await prisma.product.create({
     data: {
-      name: data.name,
-      description: data.description,
-      price: data.price,
-      image: data.image,
-      featured: data.featured,
-      categoryId: data.categoryId,
+      name,
+      description,
+      price,
+      image: imageUrl,
+      featured,
+      categoryId,
     },
   });
 
@@ -110,19 +124,32 @@ export async function createProduct(data: ProductFormData) {
   return product;
 }
 
-export async function updateProduct(id: string, data: ProductFormData) {
+export async function updateProduct(id: string, formData: FormData) {
   const session = await auth();
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized");
+
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
+  const price = Number(formData.get("price"));
+  const categoryId = formData.get("categoryId") as string;
+  const featured = formData.get("featured") === "true";
+  
+  let imageUrl = formData.get("image") as string;
+  const imageFile = formData.get("imageFile") as File;
+
+  if (imageFile && imageFile.size > 0) {
+    imageUrl = await StorageFactory.getProvider().upload(imageFile);
+  }
 
   const product = await prisma.product.update({
     where: { id },
     data: {
-      name: data.name,
-      description: data.description,
-      price: data.price,
-      image: data.image,
-      featured: data.featured,
-      categoryId: data.categoryId,
+      name,
+      description,
+      price,
+      image: imageUrl,
+      featured,
+      categoryId,
     },
   });
 

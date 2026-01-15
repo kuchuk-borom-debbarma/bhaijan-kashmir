@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProduct, updateProduct } from "../actions";
-import { Loader2, Save, X } from "lucide-react";
+import { Loader2, Save, X, Upload } from "lucide-react";
 import { Category, Product } from "@prisma/client";
 
 interface ProductFormProps {
@@ -25,30 +25,36 @@ export default function ProductForm({ categories, initialData }: ProductFormProp
     categoryId: initialData?.categoryId || (categories.length > 0 ? categories[0].id : ""),
   });
 
+  const [file, setFile] = useState<File | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const submissionData = {
-        name: formData.name,
-        description: formData.description,
-        price: Number(formData.price),
-        image: formData.image,
-        featured: formData.featured,
-        categoryId: formData.categoryId,
-      };
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("description", formData.description);
+      data.append("price", formData.price);
+      data.append("image", formData.image); // URL fallback
+      data.append("categoryId", formData.categoryId);
+      data.append("featured", String(formData.featured));
+      
+      if (file) {
+        data.append("imageFile", file);
+      }
 
       if (initialData) {
-        await updateProduct(initialData.id, submissionData);
+        await updateProduct(initialData.id, data);
       } else {
-        await createProduct(submissionData);
+        await createProduct(data);
       }
       router.push("/admin/products");
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Failed to save product");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to save product";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -97,17 +103,36 @@ export default function ProductForm({ categories, initialData }: ProductFormProp
             placeholder="0.00"
           />
         </div>
-
+        
         <div className="space-y-2">
-          <label className="text-sm font-bold text-walnut">Image URL</label>
-          <input
-            required
-            type="url"
-            className="w-full p-3 rounded-lg border border-stone-200 focus:ring-2 focus:ring-kashmir-red outline-none"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            placeholder="https://images.unsplash.com/..."
-          />
+           <label className="text-sm font-bold text-walnut">Product Image</label>
+           <div className="flex gap-2 items-center">
+             <input
+               type="text"
+               className="flex-1 p-3 rounded-lg border border-stone-200 text-sm"
+               value={formData.image}
+               onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+               placeholder="Enter URL or upload file..."
+             />
+             <div className="relative">
+               <input 
+                 type="file" 
+                 accept="image/*"
+                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                 onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                        setFile(e.target.files[0]);
+                        // Preview hack
+                        setFormData({ ...formData, image: URL.createObjectURL(e.target.files[0]) });
+                    }
+                 }}
+               />
+               <button type="button" className="p-3 bg-stone-100 rounded-lg hover:bg-stone-200 transition-colors">
+                  <Upload className="w-5 h-5 text-stone-600" />
+               </button>
+             </div>
+           </div>
+           {file && <p className="text-xs text-green-600">File selected: {file.name}</p>}
         </div>
       </div>
 
