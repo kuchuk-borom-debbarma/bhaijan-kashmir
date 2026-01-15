@@ -7,7 +7,8 @@ import ws from 'ws';
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const connectionString = process.env.DATABASE_URL;
+// Clean any potential quotes from the env var (common issue)
+const connectionString = process.env.DATABASE_URL?.replace(/^["']|["']$/g, "");
 
 if (!connectionString) {
   throw new Error("DATABASE_URL is missing from environment variables.");
@@ -25,6 +26,7 @@ try {
     adapter = new PrismaNeon(pool as any);
     console.log('🔌 Connected to Neon DB');
   } else {
+    // Explicitly pass connectionString to Pool
     const pool = new Pool({ connectionString });
     adapter = new PrismaPg(pool);
     console.log('💻 Connected to Local Postgres');
