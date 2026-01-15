@@ -8,7 +8,10 @@ import { Loader2 } from "lucide-react";
 
 declare global {
   interface Window {
-    Razorpay: new (options: any) => { open: () => void };
+    Razorpay: new (options: any) => { 
+      open: () => void;
+      on: (event: string, handler: (response: any) => void) => void;
+    };
   }
 }
 
@@ -27,15 +30,23 @@ export default function CheckoutPage() {
   const [paymentProvider, setPaymentProvider] = useState<string | null>(null);
 
   useEffect(() => {
-    // Determine provider from env if possible, or wait for createOrder response
     setPaymentProvider(process.env.NEXT_PUBLIC_PAYMENT_PROVIDER || "mock");
-    
-    // Pre-load Razorpay script if needed
-    if (process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "razorpay") {
+
+    const loadRazorpayScript = () => {
+      if (document.getElementById("razorpay-checkout-js")) return;
       const script = document.createElement("script");
+      script.id = "razorpay-checkout-js";
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.async = true;
+      script.onerror = () => {
+        console.error("Razorpay SDK failed to load");
+        setErrorMessage("Failed to load payment gateway. Please verify your connection.");
+      };
       document.body.appendChild(script);
+    };
+
+    if (process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "razorpay") {
+      loadRazorpayScript();
     }
   }, []);
 
@@ -51,10 +62,16 @@ export default function CheckoutPage() {
       const { orderId, paymentOrder } = await createOrder({ address });
       
       if (paymentOrder.providerSpecificData && paymentProvider === "razorpay") {
+        if (!window.Razorpay) {
+           setErrorMessage("Payment SDK not loaded. Please refresh.");
+           setIsLoading(false);
+           return;
+        }
+
         const options = {
           ...paymentOrder.providerSpecificData,
           handler: async function (response: RazorpayResponse) {
-            setIsLoading(true);
+            // Keep loading true while verifying
             try {
               const result = await verifyOrderPayment({
                 orderId: orderId,
@@ -68,11 +85,11 @@ export default function CheckoutPage() {
                 router.push(`/checkout/success?orderId=${orderId}`);
               } else {
                 setErrorMessage("Payment verification failed. Please contact support.");
+                setIsLoading(false);
               }
             } catch (err) {
               console.error("Verification error:", err);
               setErrorMessage("An error occurred during verification.");
-            } finally {
               setIsLoading(false);
             }
           },
@@ -84,6 +101,10 @@ export default function CheckoutPage() {
         };
 
         const rzp = new window.Razorpay(options);
+        rzp.on("payment.failed", function (response: any) {
+            setErrorMessage(`Payment failed: ${response.error.description}`);
+            setIsLoading(false);
+        });
         rzp.open();
       } else {
         // Mock flow or default

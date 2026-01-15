@@ -1,112 +1,104 @@
-# Razorpay Integration Guide for Bhaijan Kashmir
+# Razorpay Integration Guide
 
-This guide details the setup, configuration, and testing procedures for the Razorpay payment gateway integration in the Bhaijan Kashmir application.
+This project uses the **Razorpay Standard Web Integration** via a custom Adapter pattern (`PaymentProvider`).
 
-## 1. Prerequisites
+## Prerequisites
 
-Before starting, ensure you have:
-1.  A **Razorpay Account** ([Sign Up](https://razorpay.com/)).
-2.  Access to the **Razorpay Dashboard**.
-3.  Generated **Test Mode API Keys**.
+1.  **Razorpay Account**: Create an account at [razorpay.com](https://razorpay.com).
+2.  **API Keys**: Get your `Key ID` and `Key Secret` from the Razorpay Dashboard -> Settings -> API Keys.
+3.  **Webhook Secret**: Set up a webhook in Razorpay Dashboard -> Settings -> Webhooks.
+    *   **URL**: `https://your-domain.com/api/webhooks/payment` (or use Ngrok for local dev)
+    *   **Secret**: A secret string you define (e.g., `my_webhook_secret`)
+    *   **Events**: Select `payment.captured` and `order.paid`.
 
-## 2. Configuration (`.env`)
+## Configuration
 
-The application uses environment variables to manage payment providers and credentials.
+Add the following environment variables to your `.env` file:
 
-### Required Variables
-
-Update your `.env` file with the keys from your Razorpay Dashboard (**Settings** -> **API Keys**).
-
-```env
+```bash
 # Payment Provider Selection
-# Options: 'mock' (default) or 'razorpay'
-NEXT_PUBLIC_PAYMENT_PROVIDER=razorpay
+NEXT_PUBLIC_PAYMENT_PROVIDER="razorpay"
 
-# Razorpay API Keys (Backend)
-RAZORPAY_KEY_ID=rzp_test_YOUR_KEY_ID
-RAZORPAY_KEY_SECRET=YOUR_KEY_SECRET
+# Razorpay API Keys (Server-side)
+RAZORPAY_KEY_ID="rzp_test_..."
+RAZORPAY_KEY_SECRET="your_secret_..."
 
-# Razorpay Public Key (Frontend)
-# MUST match RAZORPAY_KEY_ID
-NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_YOUR_KEY_ID
+# Razorpay Webhook Secret (Server-side)
+RAZORPAY_WEBHOOK_SECRET="your_webhook_secret"
 
-# Webhook Secret
-# You define this string. It must match what you enter in the Razorpay Dashboard.
-RAZORPAY_WEBHOOK_SECRET=your_custom_secret_string
+# Public Key for Frontend (Must match RAZORPAY_KEY_ID)
+NEXT_PUBLIC_RAZORPAY_KEY_ID="rzp_test_..."
 ```
 
-## 3. Webhook Setup
+## How It Works
 
-Webhooks are **critical** for this integration. They ensure orders are marked as `PAID` in the database even if the user closes their browser immediately after payment.
+1.  **Order Creation (Backend)**:
+    *   User clicks "Checkout".
+    *   `src/app/checkout/actions.ts` -> `createOrder` calls `RazorpayProvider.createPaymentOrder`.
+    *   It creates a Razorpay Order (`razorpay.orders.create`) server-side.
+    *   Returns the `order_id` and other details to the frontend.
 
-### Steps to Configure
+2.  **Payment Flow (Frontend)**:
+    *   `src/app/checkout/page.tsx` receives the order details.
+    *   It initializes the Razorpay Checkout form (`new Razorpay(options)`).
+    *   User completes payment.
 
-1.  Log in to the [Razorpay Dashboard](https://dashboard.razorpay.com/).
-2.  Navigate to **Settings** -> **Webhooks**.
-3.  Click **+ Add New Webhook**.
+3.  **Verification (Backend)**:
+    *   On success, the frontend calls `verifyOrderPayment`.
+    *   The backend validates the `razorpay_signature` using HMAC SHA256.
+    *   If valid, the Order status is updated to `PAID`.
 
-### Settings
+4.  **Webhooks (Safety Net)**:
+    *   If the user closes the browser before verification, Razorpay sends a webhook (`payment.captured`).
+    *   `src/app/api/webhooks/payment/route.ts` receives it.
+    *   `RazorpayProvider.processWebhook` verifies the signature and updates the order status to `PAID`.
 
-| Field | Value | Notes |
-| :--- | :--- | :--- |
-| **Webhook URL** | `https://your-domain.com/api/webhooks/payment` | For local dev, use `ngrok` (see below). |
-| **Secret** | `your_custom_secret_string` | Must match `RAZORPAY_WEBHOOK_SECRET` in `.env`. |
-| **Active Events** | `payment.captured` | **Required.** This is the only event we listen for to confirm payment. |
+## Testing
 
-### Local Development (ngrok)
+1.  Set `NEXT_PUBLIC_PAYMENT_PROVIDER="razorpay"` in `.env`.
+2.  Use **Test Mode** API keys.
+3.  Use Razorpay's test card details (available in their docs) to complete a transaction.
 
-To test webhooks locally:
+## Architecture & Internal Logic
 
-1.  Install **ngrok** (or a similar tunneling tool).
-2.  Run ngrok on your app's port:
-    ```bash
-    ngrok http 3000
-    ```
-3.  Copy the HTTPS URL provided by ngrok (e.g., `https://1234abcd.ngrok-free.app`).
-4.  Use this URL in the Razorpay Dashboard:
-    `https://1234abcd.ngrok-free.app/api/webhooks/payment`
+This project uses the **Adapter Pattern** to abstract payment providers. This allows you to switch between Mock, Razorpay, or future providers (like Stripe) without changing the core checkout logic.
 
-## 4. Testing
+### Key Files & Responsibilities
 
-### Test Cards
+1.  **Interface Definition** (`src/lib/payment/types.ts`)
+    *   Defines the contract that all providers must follow: `createPaymentOrder`, `verifyPayment`, `processWebhook`.
+    *   **Customization**: If you need to pass extra data to a provider, update `PaymentOrderRequest` or `PaymentOrderResponse` here.
 
-Razorpay provides specific test card details to simulate various scenarios (Success, Failure, etc.).
+2.  **The Factory** (`src/lib/payment/factory.ts`)
+    *   **Role**: Decides which provider to instantiate based on `NEXT_PUBLIC_PAYMENT_PROVIDER`.
+    *   **Customization**: Add new case statements here when adding new providers (e.g., Stripe).
 
-*   **Card Number:** `4111 1111 1111 1111` (Visa)
-*   **Expiry:** Any future date (e.g., `12/30`)
-*   **CVV:** Any 3 digits (e.g., `123`)
-*   **OTP:** Use `123456` (Razorpay's test bank page will ask for this).
+3.  **Razorpay Implementation** (`src/lib/payment/providers/razorpay.ts`)
+    *   **Role**: The actual implementation of the Razorpay logic.
+    *   **Internal Flow**:
+        *   `createPaymentOrder`: Converts our internal currency/amount to Razorpay's format (paise) and calls `razorpay.orders.create`.
+        *   `verifyPayment`: Implements the HMAC-SHA256 signature verification mandatory for security.
+        *   `processWebhook`: Parses the raw body, verifies signature, and updates the database.
 
-See [Razorpay Test Card Documentation](https://razorpay.com/docs/payments/payments/test-card-details/) for more options.
+4.  **Checkout Logic** (`src/app/checkout/actions.ts`)
+    *   **Role**: The high-level orchestrator.
+    *   **Flow**:
+        1.  Checks Rate Limits.
+        2.  Calculates Cart Total.
+        3.  Creates `Order` in Postgres (Status: `PENDING`).
+        4.  Calls `PaymentFactory.getProvider().createPaymentOrder()`.
+        5.  Returns the Order ID and Provider Data to the frontend.
 
-### Verification Flow
+5.  **Frontend Orchestration** (`src/app/checkout/page.tsx`)
+    *   **Role**: Handles the UI and the "Handshake".
+    *   **Flow**:
+        1.  Calls `createOrder` action.
+        2.  Initializes `window.Razorpay` with the returned data.
+        3.  On success/failure, calls `verifyOrderPayment` action to finalize the order in the DB.
 
-1.  **Add to Cart:** Add items to your cart on `http://localhost:3000`.
-2.  **Checkout:** Proceed to checkout and enter an address.
-3.  **Pay:** Click "Pay". The Razorpay modal should open.
-4.  **Complete Payment:** Use the test card details.
-5.  **Success Page:** You should be redirected to the Order Success page.
-6.  **Database Check:** Verify the order status is `PAID` in the database:
-    ```bash
-    npx prisma studio
-    ```
-    Check the `Order` table.
+### Common Customization Scenarios
 
-## 5. Going Live (Production)
-
-1.  **KYC:** Complete your KYC on Razorpay to activate your account.
-2.  **Generate Live Keys:** In the Dashboard, switch to "Live Mode" and generate new API Keys.
-3.  **Update Environment:** Update your production environment variables (e.g., Vercel, AWS) with the Live Keys.
-    *   `RAZORPAY_KEY_ID` (starts with `rzp_live_...`)
-    *   `NEXT_PUBLIC_RAZORPAY_KEY_ID`
-    *   `RAZORPAY_KEY_SECRET`
-4.  **Add Live Webhook:** Create a **new** webhook in the Razorpay Dashboard (Live Mode) pointing to your production URL.
-
-## Troubleshooting
-
-*   **Modal doesn't open:** Check browser console. Ensure `NEXT_PUBLIC_RAZORPAY_KEY_ID` is set correctly.
-*   **"Invalid API Key":** Ensure you are using the correct Key ID for the selected mode (Test vs Live).
-*   **Order stays PENDING:**
-    *   Did the webhook fire? Check Razorpay Dashboard -> Webhooks -> Select Webhook -> Delivery attempts.
-    *   Did the signature verify? Check server logs for `[Razorpay Webhook] Invalid signature`.
-    *   Is the Secret correct?
+*   **Adding New Fields to Razorpay**:
+    *   Edit `src/lib/payment/providers/razorpay.ts` inside `createPaymentOrder`. You can add more to the `notes` object, which appears in the Razorpay Dashboard.
+*   **Changing Post-Payment Logic**:
+    *   Edit `src/app/checkout/actions.ts` -> `verifyOrderPayment`. This is where emails are sent and the order is marked confirmed.
