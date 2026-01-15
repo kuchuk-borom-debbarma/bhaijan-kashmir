@@ -14,7 +14,14 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is missing from environment variables.");
 }
 
-const isNeon = connectionString.includes('neon.tech');
+// Debug Log (First 20 chars only for safety)
+console.log(`[DB Config] URL Start: ${connectionString.substring(0, 20)}...`);
+
+// Determine if we are using Neon (cloud) or local Postgres
+// STRICT CHECK: Only use Neon adapter if it's neon.tech AND NOT localhost
+const isNeon = connectionString.includes('neon.tech') && !connectionString.includes('localhost') && !connectionString.includes('127.0.0.1');
+
+console.log(`[DB Config] Mode: ${isNeon ? 'Neon (Serverless)' : 'Local (Standard)'}`);
 
 let adapter;
 
