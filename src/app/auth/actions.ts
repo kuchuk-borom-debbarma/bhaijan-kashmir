@@ -8,8 +8,17 @@ import bcrypt from 'bcryptjs';
 import { signIn, signOut } from '@/auth';
 import { AuthError } from 'next-auth';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 
 export async function signOutAction() {
+  const cookieStore = await cookies();
+  
+  // Force delete session cookies to ensure sign out
+  cookieStore.delete('authjs.session-token');
+  cookieStore.delete('__Secure-authjs.session-token');
+  cookieStore.delete('next-auth.session-token');
+  cookieStore.delete('__Secure-next-auth.session-token');
+
   revalidatePath('/', 'layout');
   await signOut({ redirectTo: '/' });
 }
