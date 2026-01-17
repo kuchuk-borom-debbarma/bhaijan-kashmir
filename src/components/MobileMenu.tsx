@@ -72,10 +72,11 @@ export default function MobileMenu({ user, host }: MobileMenuProps) {
               </Link>
               
               <button
-                onClick={() => {
+                onClick={async () => {
                   resetLocalCart();
                   setIsOpen(false);
-                  signOut({ callbackUrl: host || window.location.origin });
+                  await signOut({ redirect: false });
+                  window.location.href = host || "/";
                 }}
                 className="flex w-full items-center gap-2 text-lg font-medium text-walnut hover:text-kashmir-red transition-colors"
               >

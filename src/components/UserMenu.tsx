@@ -69,9 +69,10 @@ export default function UserMenu({ user, host }: UserMenuProps) {
           </Link>
 
           <button
-            onClick={() => {
+            onClick={async () => {
               resetLocalCart();
-              signOut({ callbackUrl: host || window.location.origin });
+              await signOut({ redirect: false });
+              window.location.href = host || "/";
             }}
             className="flex w-full items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors text-left"
           >
