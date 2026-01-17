@@ -74,7 +74,7 @@ export default function MobileMenu({ user }: MobileMenuProps) {
                 onClick={() => {
                   resetLocalCart();
                   setIsOpen(false);
-                  signOut({ callbackUrl: '/' });
+                  signOut({ callbackUrl: window.location.origin });
                 }}
                 className="flex w-full items-center gap-2 text-lg font-medium text-walnut hover:text-kashmir-red transition-colors"
               >
