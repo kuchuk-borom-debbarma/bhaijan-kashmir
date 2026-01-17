@@ -4,7 +4,7 @@ import { Menu, X, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { User } from 'next-auth';
-import { signOutAction } from '@/app/auth/actions';
+import { signOut } from 'next-auth/react';
 import { useCartStore } from '@/store/cart';
 
 interface MobileMenuProps {
@@ -70,20 +70,16 @@ export default function MobileMenu({ user }: MobileMenuProps) {
                 My Orders
               </Link>
               
-              <form
-                action={signOutAction}
-                onSubmit={() => {
-                    resetLocalCart();
-                    setIsOpen(false);
+              <button
+                onClick={() => {
+                  resetLocalCart();
+                  setIsOpen(false);
+                  signOut({ callbackUrl: '/' });
                 }}
+                className="flex w-full items-center gap-2 text-lg font-medium text-walnut hover:text-kashmir-red transition-colors"
               >
-                <button
-                    type="submit"
-                    className="flex w-full items-center gap-2 text-lg font-medium text-walnut hover:text-kashmir-red transition-colors"
-                >
-                    Sign Out
-                </button>
-              </form>
+                  Sign Out
+              </button>
             </>
           ) : (
             <Link

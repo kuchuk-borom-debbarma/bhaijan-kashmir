@@ -3,7 +3,7 @@
 import { User, LogOut, UserCircle, Package } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
-import { signOutAction } from '@/app/auth/actions';
+import { signOut } from 'next-auth/react';
 import { useCartStore } from '@/store/cart';
 
 interface UserMenuProps {
@@ -31,11 +31,6 @@ export default function UserMenu({ user }: UserMenuProps) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  const handleSignOut = async () => {
-    resetLocalCart();
-    await signOutAction();
-  };
 
   return (
     <div className="relative" ref={menuRef}>
@@ -72,19 +67,16 @@ export default function UserMenu({ user }: UserMenuProps) {
             My Orders
           </Link>
 
-          <form
-            action={signOutAction}
-            onSubmit={() => resetLocalCart()}
-            className="w-full"
+          <button
+            onClick={() => {
+              resetLocalCart();
+              signOut({ callbackUrl: '/' });
+            }}
+            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors text-left"
           >
-            <button
-              type="submit"
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors text-left"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
-          </form>
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </button>
         </div>
       )}
     </div>
