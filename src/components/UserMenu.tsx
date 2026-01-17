@@ -72,13 +72,19 @@ export default function UserMenu({ user }: UserMenuProps) {
             My Orders
           </Link>
 
-          <button
-            onClick={handleSignOut}
-            className="flex w-full items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors text-left"
+          <form
+            action={signOutAction}
+            onSubmit={() => resetLocalCart()}
+            className="w-full"
           >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
+            <button
+              type="submit"
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors text-left"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </form>
         </div>
       )}
     </div>

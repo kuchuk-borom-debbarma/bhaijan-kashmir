@@ -1,9 +1,11 @@
 'use client';
 
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { User } from 'next-auth';
+import { signOutAction } from '@/app/auth/actions';
+import { useCartStore } from '@/store/cart';
 
 interface MobileMenuProps {
   user?: User;
@@ -11,6 +13,7 @@ interface MobileMenuProps {
 
 export default function MobileMenu({ user }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const resetLocalCart = useCartStore((state) => state.resetLocalCart);
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -66,10 +69,21 @@ export default function MobileMenu({ user }: MobileMenuProps) {
               >
                 My Orders
               </Link>
-              {/* Sign out is handled by UserMenu usually, but for mobile we might need a dedicated button or just rely on the desktop user menu if visible? 
-                  Actually, UserMenu is visible in the navbar actions. 
-                  So we just need the navigation links here. 
-              */}
+              
+              <form
+                action={signOutAction}
+                onSubmit={() => {
+                    resetLocalCart();
+                    setIsOpen(false);
+                }}
+              >
+                <button
+                    type="submit"
+                    className="flex w-full items-center gap-2 text-lg font-medium text-walnut hover:text-kashmir-red transition-colors"
+                >
+                    Sign Out
+                </button>
+              </form>
             </>
           ) : (
             <Link
