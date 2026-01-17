@@ -80,9 +80,9 @@ export async function signUpAction(prevState: AuthActionState, formData: FormDat
   // Generate Magic Link Token
   const token = await createMagicLinkToken({ firstName, lastName, username, email });
 
-  // Construct Link (Assumes localhost for now, should be env var in prod)
-  // In production, use process.env.NEXT_PUBLIC_APP_URL
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  // Construct Link
+  // Priority: HOST (server-side env) -> NEXT_PUBLIC_APP_URL (client-side env) -> localhost fallback
+  const baseUrl = process.env.HOST || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   const magicLink = `${baseUrl}/auth/verify?token=${token}`;
 
   // Send Notification
