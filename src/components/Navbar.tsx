@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { Menu, User } from 'lucide-react';
+import { User } from 'lucide-react';
 import NavbarCart from './NavbarCart';
 import CartDrawer from './CartDrawer';
 import UserMenu from './UserMenu';
+import MobileMenu from './MobileMenu';
 import { auth } from '@/auth';
 
 export default async function Navbar() {
@@ -43,9 +44,7 @@ export default async function Navbar() {
             <NavbarCart />
             
             {/* Mobile Menu Button */}
-            <button className="md:hidden p-2 text-walnut">
-              <Menu className="w-6 h-6" />
-            </button>
+            <MobileMenu user={session?.user} />
           </div>
         </div>
       </nav>

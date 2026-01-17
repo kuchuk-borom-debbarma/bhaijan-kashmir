@@ -7,8 +7,10 @@ import { notificationService } from '@/lib/notifications';
 import bcrypt from 'bcryptjs';
 import { signIn, signOut } from '@/auth';
 import { AuthError } from 'next-auth';
+import { revalidatePath } from 'next/cache';
 
 export async function signOutAction() {
+  revalidatePath('/', 'layout');
   await signOut({ redirectTo: '/' });
 }
 
