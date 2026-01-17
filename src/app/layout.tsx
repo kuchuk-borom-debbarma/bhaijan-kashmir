@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import CartInitializer from "@/components/CartInitializer";
 import { auth } from "@/auth";
 
+import NextTopLoader from 'nextjs-toploader';
+
 const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-serif",
@@ -54,6 +56,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${playfair.variable} ${inter.variable} font-sans antialiased bg-stone-50 text-walnut flex flex-col min-h-screen`}>
+        <NextTopLoader color="#c8102e" showSpinner={false} />
         <CartInitializer userId={session?.user?.id} />
         <Navbar />
         <main className="flex-grow">
