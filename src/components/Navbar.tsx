@@ -34,7 +34,7 @@ export default async function Navbar() {
           {/* Actions */}
           <div className="flex items-center gap-4">
             {session?.user ? (
-                <UserMenu user={session.user} />
+                <UserMenu user={session.user} host={process.env.HOST} />
             ) : (
                 <Link href="/auth/sign-in" className="hidden md:block text-sm font-medium text-walnut hover:text-kashmir-red transition-colors">
                     Sign In
@@ -44,7 +44,7 @@ export default async function Navbar() {
             <NavbarCart />
             
             {/* Mobile Menu Button */}
-            <MobileMenu user={session?.user} />
+            <MobileMenu user={session?.user} host={process.env.HOST} />
           </div>
         </div>
       </nav>

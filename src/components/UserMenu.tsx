@@ -12,9 +12,10 @@ interface UserMenuProps {
     email?: string | null;
     image?: string | null;
   };
+  host?: string;
 }
 
-export default function UserMenu({ user }: UserMenuProps) {
+export default function UserMenu({ user, host }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const resetLocalCart = useCartStore((state) => state.resetLocalCart);
@@ -70,7 +71,7 @@ export default function UserMenu({ user }: UserMenuProps) {
           <button
             onClick={() => {
               resetLocalCart();
-              signOut({ callbackUrl: window.location.origin });
+              signOut({ callbackUrl: host || window.location.origin });
             }}
             className="flex w-full items-center gap-2 px-4 py-2 text-sm text-walnut hover:bg-stone-50 hover:text-kashmir-red transition-colors text-left"
           >

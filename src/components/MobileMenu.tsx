@@ -9,9 +9,10 @@ import { useCartStore } from '@/store/cart';
 
 interface MobileMenuProps {
   user?: User;
+  host?: string;
 }
 
-export default function MobileMenu({ user }: MobileMenuProps) {
+export default function MobileMenu({ user, host }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const resetLocalCart = useCartStore((state) => state.resetLocalCart);
 
@@ -74,7 +75,7 @@ export default function MobileMenu({ user }: MobileMenuProps) {
                 onClick={() => {
                   resetLocalCart();
                   setIsOpen(false);
-                  signOut({ callbackUrl: window.location.origin });
+                  signOut({ callbackUrl: host || window.location.origin });
                 }}
                 className="flex w-full items-center gap-2 text-lg font-medium text-walnut hover:text-kashmir-red transition-colors"
               >
